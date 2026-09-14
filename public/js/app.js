@@ -15,41 +15,7 @@ const state = {
     supabaseConnected: false
 };
 
-// Preset Demo Accounts
-const PRESET_USERS = {
-    admin: {
-        id: '11111111-1111-1111-1111-111111111111',
-        email: 'admin@unhas.ac.id',
-        nim_nip: '198501012010011001',
-        full_name: 'Direktorat SDM Admin UNHAS',
-        role: 'admin',
-        role_label: 'Admin SDM FK UNHAS',
-        department: 'Direktorat SDM & Sistem Informasi',
-        avatar: 'https://ui-avatars.com/api/?name=Admin+SDM&background=800000&color=fff'
-    },
-    reviewer: {
-        id: '22222222-2222-2222-2222-222222222222',
-        email: 'dahlang@unhas.ac.id',
-        nim_nip: '197505122003121002',
-        full_name: 'Prof. Dr. Dahlang T., S.Si., M.Si.',
-        role: 'reviewer',
-        role_label: 'Dosen Reviewer Jurnal',
-        department: 'Departemen Bedah & Kedokteran Spesialis',
-        avatar: 'https://ui-avatars.com/api/?name=Prof+Dahlang&background=0284c7&color=fff'
-    },
-    residen: {
-        id: '33333333-3333-3333-3333-333333333333',
-        email: 'ijoneon@pasca.unhas.ac.id',
-        nim_nip: 'C111201045',
-        full_name: 'dr. Ijoneon Ardiansyah',
-        role: 'residen',
-        role_label: 'Residen PPDS Bedah',
-        department: 'Spesialis Ilmu Bedah Orthopedi (PPDS)',
-        avatar: 'https://ui-avatars.com/api/?name=dr+Ijoneon&background=10b981&color=fff'
-    }
-};
-
-// Initial Mock Seed Data
+// Initial Seed Data
 const MOCK_JOURNALS = [
     {
         id: 'a1111111-1111-1111-1111-111111111111',

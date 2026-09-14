@@ -77,16 +77,17 @@ CREATE TABLE IF NOT EXISTS public.announcements (
 );
 
 -- ==============================================================================
--- INITIAL SEED DATA FOR TESTING / PRODUCTION DEPLOYMENT
+-- ==============================================================================
+-- INITIAL SYSTEM ACCOUNTS & DATA FOR PRODUCTION DEPLOYMENT
 -- ==============================================================================
 
--- Seed Users
+-- Seed System Users
 INSERT INTO public.users (id, email, nim_nip, password_hash, full_name, role, department)
 VALUES 
     ('11111111-1111-1111-1111-111111111111', 'admin@unhas.ac.id', '198501012010011001', 'admin123', 'Direktorat SDM Admin UNHAS', 'admin', 'Bagian SDM & Teknologi Informasi FK UNHAS'),
-    ('22222222-2222-2222-2222-222222222222', 'dahlang@unhas.ac.id', '197505122003121002', 'reviewer123', 'Prof. Dr. Dahlang T., S.Si., M.Si.', 'reviewer', 'Departemen Bedah & Kedokteran Spesialis'),
-    ('33333333-3333-3333-3333-333333333333', 'ijoneon@pasca.unhas.ac.id', 'C111201045', 'residen123', 'dr. Ijoneon Ardiansyah', 'residen', 'Spesialis Ilmu Bedah (PPDS)'),
-    ('44444444-4444-4444-4444-444444444444', 'inayatul@pasca.unhas.ac.id', 'C111201088', 'residen123', 'dr. Inayatul Mutmainna', 'residen', 'Spesialis Anestesiologi & Terapi Intensif')
+    ('22222222-2222-2222-2222-222222222222', 'reviewer@unhas.ac.id', '197505122003121002', 'reviewer123', 'Prof. Dr. Dahlang T., S.Si., M.Si.', 'reviewer', 'Departemen Bedah & Kedokteran Spesialis'),
+    ('33333333-3333-3333-3333-333333333333', 'user@unhas.ac.id', 'C111201045', 'user123', 'dr. Ariel Usman', 'residen', 'Spesialis Ilmu Bedah (PPDS)'),
+    ('44444444-4444-4444-4444-444444444444', 'residen@unhas.ac.id', 'C111201088', 'residen123', 'dr. Inayatul Mutmainna', 'residen', 'Spesialis Anestesiologi & Terapi Intensif')
 ON CONFLICT (email) DO NOTHING;
 
 -- Seed Sample Journals
@@ -101,8 +102,8 @@ VALUES
         'SEMRIPMAS IV 2026', 
         'Perubahan iklim, kebencanaan, dan ekonomi sirkular', 
         'Spesialis Ilmu Bedah Orthopedi', 
-        'dr. Ijoneon Ardiansyah', 
-        'ijoneon@pasca.unhas.ac.id', 
+        'dr. Ariel Usman', 
+        'user@unhas.ac.id', 
         'accepted',
         '33333333-3333-3333-3333-333333333333'
     ),
@@ -116,7 +117,7 @@ VALUES
         'Sustainable Agriculture & Clinical Innovation', 
         'Spesialis Anestesiologi & Terapi Intensif', 
         'dr. Inayatul Mutmainna', 
-        'inayatul@pasca.unhas.ac.id', 
+        'residen@unhas.ac.id', 
         'pending',
         '44444444-4444-4444-4444-444444444444'
     ),
@@ -148,7 +149,7 @@ ALTER TABLE public.journals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 
--- Policies for public reading during demo/production
+-- Policies for public reading/writing in application
 CREATE POLICY "Allow public read access for users" ON public.users FOR SELECT USING (true);
 CREATE POLICY "Allow public read access for journals" ON public.journals FOR SELECT USING (true);
 CREATE POLICY "Allow public insert access for journals" ON public.journals FOR INSERT WITH CHECK (true);

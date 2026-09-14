@@ -77,6 +77,54 @@ initSupabase(SUPABASE_URL, SUPABASE_KEY);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(__dirname));
 
+// Local In-Memory Fallback Users (Matching Supabase Schema)
+let memoryUsers = [
+    {
+        id: '11111111-1111-1111-1111-111111111111',
+        email: 'admin@unhas.ac.id',
+        nim_nip: '198501012010011001',
+        password: 'admin123',
+        full_name: 'Direktorat SDM Admin UNHAS',
+        role: 'admin',
+        role_label: 'Admin SDM FK UNHAS',
+        department: 'Bagian SDM & Teknologi Informasi FK UNHAS',
+        avatar: 'https://ui-avatars.com/api/?name=Admin+SDM&background=800000&color=fff'
+    },
+    {
+        id: '22222222-2222-2222-2222-222222222222',
+        email: 'reviewer@unhas.ac.id',
+        nim_nip: '197505122003121002',
+        password: 'reviewer123',
+        full_name: 'Prof. Dr. Dahlang T., S.Si., M.Si.',
+        role: 'reviewer',
+        role_label: 'Dosen Reviewer Jurnal',
+        department: 'Departemen Bedah & Kedokteran Spesialis',
+        avatar: 'https://ui-avatars.com/api/?name=Prof+Dahlang&background=0284c7&color=fff'
+    },
+    {
+        id: '33333333-3333-3333-3333-333333333333',
+        email: 'user@unhas.ac.id',
+        nim_nip: 'C111201045',
+        password: 'user123',
+        full_name: 'dr. Ariel Usman',
+        role: 'residen',
+        role_label: 'Residen PPDS Bedah',
+        department: 'Spesialis Ilmu Bedah (PPDS)',
+        avatar: 'https://ui-avatars.com/api/?name=dr+Ariel&background=10b981&color=fff'
+    },
+    {
+        id: '44444444-4444-4444-4444-444444444444',
+        email: 'residen@unhas.ac.id',
+        nim_nip: 'C111201088',
+        password: 'residen123',
+        full_name: 'dr. Inayatul Mutmainna',
+        role: 'residen',
+        role_label: 'Residen PPDS Anestesi',
+        department: 'Spesialis Anestesiologi & Terapi Intensif',
+        avatar: 'https://ui-avatars.com/api/?name=dr+Inayatul&background=10b981&color=fff'
+    }
+];
+
 // Local In-Memory Fallback Database
 let memoryJournals = [
     {
@@ -180,6 +228,82 @@ app.post('/api/config/supabase', (req, res) => {
         res.json({ success: true, message: 'Berhasil terhubung ke database cloud Supabase!' });
     } else {
         res.status(400).json({ success: false, message: 'URL atau Anon Key Supabase tidak valid.' });
+    }
+});
+
+// Authentication Endpoint (Supabase Cloud + Local Fallback)
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { identifier, password } = req.body;
+        if (!identifier || !password) {
+            return res.status(400).json({ success: false, message: 'Silakan masukkan Email / NIP / NIM dan Password.' });
+        }
+
+        const cleanIdentifier = identifier.trim();
+
+        // 1. Check in Supabase if connected
+        if (supabase) {
+            try {
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('*')
+                    .or(`email.ilike.${cleanIdentifier},nim_nip.eq.${cleanIdentifier}`)
+                    .eq('password_hash', password)
+                    .maybeSingle();
+
+                if (!error && data) {
+                    const roleLabel = data.role === 'admin' 
+                        ? 'Admin SDM FK UNHAS' 
+                        : (data.role === 'reviewer' ? 'Dosen Reviewer Jurnal' : 'Residen PPDS UNHAS');
+
+                    return res.json({
+                        success: true,
+                        source: 'supabase',
+                        user: {
+                            id: data.id,
+                            email: data.email,
+                            nim_nip: data.nim_nip,
+                            full_name: data.full_name,
+                            role: data.role,
+                            role_label: roleLabel,
+                            department: data.department || 'Fakultas Kedokteran UNHAS',
+                            avatar: data.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.full_name)}&background=${data.role === 'admin' ? '800000' : (data.role === 'reviewer' ? '0284c7' : '10b981')}&color=fff`
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error('Supabase user auth query error:', err.message);
+            }
+        }
+
+        // 2. Check in In-Memory Users
+        const matched = memoryUsers.find(
+            u => (u.email.toLowerCase() === cleanIdentifier.toLowerCase() || u.nim_nip === cleanIdentifier) && u.password === password
+        );
+
+        if (matched) {
+            return res.json({
+                success: true,
+                source: 'memory',
+                user: {
+                    id: matched.id,
+                    email: matched.email,
+                    nim_nip: matched.nim_nip,
+                    full_name: matched.full_name,
+                    role: matched.role,
+                    role_label: matched.role_label,
+                    department: matched.department,
+                    avatar: matched.avatar
+                }
+            });
+        }
+
+        return res.status(401).json({
+            success: false,
+            message: 'Email / NIP / NIM atau Password salah!'
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Terjadi kesalahan sistem saat proses login.' });
     }
 });
 
