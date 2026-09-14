@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jurnal PPDS UNHAS - Sistem CMS & Management Jurnal Dokter Spesialis Universitas Hasanuddin</title>
+    <meta name="description" content="Aplikasi Sistem Penilaian dan Management Jurnal PPDS (Program Pendidikan Dokter Spesialis) Universitas Hasanuddin Makassar. Integrated with Supabase Cloud Database.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        unhas: {
+                            maroon: '#800000',
+                            dark: '#600000',
+                            light: '#a30000',
+                            soft: '#fff5f5',
+                            gold: '#eab308'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- FontAwesome 6 Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f4f6f9;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        .bg-unhas-maroon { background-color: #800000 !important; }
+        .bg-unhas-maroon-dark { background-color: #600000 !important; }
+        .bg-unhas-soft { background-color: #fff5f5 !important; }
+        .text-unhas-maroon { color: #800000 !important; }
+        .border-unhas-maroon { border-color: #800000 !important; }
+
+        .login-left-banner {
+            background: linear-gradient(135deg, rgba(128, 0, 0, 0.94) 0%, rgba(96, 0, 0, 0.96) 100%), 
+                        url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .login-card-shadow {
+            box-shadow: 0 20px 40px -15px rgba(128, 0, 0, 0.15), 0 0 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-hover-effect {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover-effect:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.1);
+        }
+
+        .custom-cms-table th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .custom-cms-table td {
+            padding: 1rem 1rem;
+            vertical-align: middle;
+            font-size: 0.875rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .custom-cms-table tr:hover td {
+            background-color: #fafbfd;
+        }
+
+        .badge-status-accepted {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .badge-status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+        .badge-status-rejected {
+            background-color: #ffe4e6;
+            color: #9f1239;
+            border: 1px solid #fecdd3;
+        }
+        .badge-status-revision {
+            background-color: #e0e7ff;
+            color: #3730a3;
+            border: 1px solid #c7d2fe;
+        }
+
+        .pdf-preview-box {
+            background: #525659;
+            border-radius: 8px;
+            min-height: 480px;
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 antialiased selection:bg-unhas-maroon selection:text-white">
+
+    <!-- ============================================================================== -->
+    <!-- 1. LOGIN VIEW (Ref Gambar 1: Jurnal PPDS UNHAS Style) -->
+    <!-- ============================================================================== -->
+    <div id="login-view" class="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-[#5c0000]">
+        <div class="w-full max-w-5xl bg-white rounded-2xl overflow-hidden login-card-shadow flex flex-col md:flex-row min-h-[580px]">
+            
+            <!-- Left Panel: Hero Image & Quote Banner -->
+            <div class="w-full md:w-1/2 login-left-banner p-8 md:p-12 flex flex-col justify-between text-white relative">
+                <!-- Top Brand Logo -->
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 flex items-center justify-center font-bold text-2xl tracking-tighter text-white">
+                        <i class="fa-solid fa-graduation-cap text-unhas-gold"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-black tracking-wider uppercase leading-none font-mono">JURNAL PPDS</h1>
+                        <p class="text-[11px] font-semibold tracking-widest text-red-200 uppercase mt-0.5">UNIVERSITAS HASANUDDIN</p>
+                    </div>
+                </div>
+
+                <!-- Middle Quote Carousel -->
+                <div class="my-8 relative z-10">
+                    <span class="text-6xl font-serif text-white/30 leading-none select-none">“</span>
+                    <p class="text-lg md:text-xl font-light italic leading-relaxed text-red-50 -mt-6">
+                        Selamat datang di Sistem Jurnal PPDS Universitas Hasanuddin. Portal Management Jurnal & Penilaian Dokter Spesialis UNHAS.
+                    </p>
+                    
+                    <!-- Carousel Slider Indicators -->
+                    <div class="flex items-center gap-2 mt-6">
+                        <span class="w-4 h-1 bg-white/40 rounded-full"></span>
+                        <span class="w-4 h-1 bg-white/40 rounded-full"></span>
+                        <span class="w-8 h-1 bg-white rounded-full"></span>
+                    </div>
+                </div>
+
+                <!-- Bottom Footer Info -->
+                <div class="text-xs text-red-200/80 border-t border-white/10 pt-4 flex items-center justify-between">
+                    <span>Program Pendidikan Dokter Spesialis</span>
+                    <span>FK UNHAS Makassar</span>
+                </div>
+            </div>
+
+            <!-- Right Panel: Login Form -->
+            <div class="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-between bg-white">
+                <div>
+                    <!-- Form Title -->
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-unhas-maroon">Selamat Datang</h2>
+                        <p class="text-xs md:text-sm text-slate-500 mt-1">Silahkan masukkan Email / NIP / NIM dan Password anda.</p>
+                    </div>
+
+                    <!-- Preset User Quick Switchers -->
+                    <div class="mb-6 bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+                        <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <i class="fa-solid fa-key text-unhas-maroon"></i> Pilih Akses Cepat Demo:
+                        </p>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button id="quick-login-admin" type="button" class="px-2 py-1.5 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 hover:border-unhas-maroon hover:text-unhas-maroon rounded-lg transition shadow-sm text-center truncate">
+                                👑 Admin SDM
+                            </button>
+                            <button id="quick-login-reviewer" type="button" class="px-2 py-1.5 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 hover:border-unhas-maroon hover:text-unhas-maroon rounded-lg transition shadow-sm text-center truncate">
+                                👨‍🏫 Reviewer Dosen
+                            </button>
+                            <button id="quick-login-residen" type="button" class="px-2 py-1.5 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 hover:border-unhas-maroon hover:text-unhas-maroon rounded-lg transition shadow-sm text-center truncate">
+                                🩺 Residen PPDS
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Main Login Form -->
+                    <form id="login-form" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Email / NIM / NIP</label>
+                            <input type="text" id="login-identifier" required placeholder="Masukkan NIP / NIM / Email" 
+                                class="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-unhas-maroon focus:ring-2 focus:ring-red-100 outline-none transition" value="197505122003121002">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Password</label>
+                            <div class="relative">
+                                <input type="password" id="login-password" required placeholder="Masukkan password" 
+                                    class="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 focus:border-unhas-maroon focus:ring-2 focus:ring-red-100 outline-none transition pr-10" value="reviewer123">
+                                <button type="button" id="toggle-password-btn" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full py-3 bg-unhas-maroon hover:bg-unhas-maroon-dark text-white font-bold text-sm rounded-lg shadow-md hover:shadow-lg transition duration-200 mt-2">
+                            Sign In
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Footer Support Link -->
+                <div class="mt-8 text-center text-xs text-slate-500">
+                    Kesulitan login ? <a href="javascript:void(0)" onclick="alert('Silakan hubungi Direktorat SDM & IT FK UNHAS via Email: sdm@unhas.ac.id')" class="font-bold text-unhas-maroon underline hover:text-unhas-maroon-dark">Hubungi Admin Direktorat SDM</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- ============================================================================== -->
+    <!-- 2. MAIN APPLICATION LAYOUT (HEADER + SIDEBAR + DASHBOARD + TABLES) -->
+    <!-- ============================================================================== -->
+    <div id="main-app-layout" class="hidden min-h-screen flex flex-col bg-slate-100">
+
+        <!-- STICKY TOP HEADER -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+            <div class="px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+                
+                <!-- Left Header: Mobile Menu Toggle & Brand -->
+                <div class="flex items-center gap-4">
+                    <button id="toggle-sidebar-btn" class="md:hidden text-slate-600 hover:text-unhas-maroon focus:outline-none p-1">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                    
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-unhas-maroon text-white flex items-center justify-center font-black text-lg">
+                            A
+                        </div>
+                        <div>
+                            <span class="font-extrabold text-lg text-slate-900 tracking-tight leading-none block">jurnal ppds</span>
+                            <span class="text-[10px] text-slate-400 font-semibold tracking-wider uppercase block">UNIVERSITAS HASANUDDIN</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Center Cloud Status Badge -->
+                <div class="hidden sm:flex items-center gap-2">
+                    <div id="cloud-status-badge" class="px-3 py-1 text-xs font-semibold text-emerald-700 bg-emerald-100 rounded-full flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Supabase Connected
+                    </div>
+                </div>
+
+                <!-- Right Header: Notifications & Active User Profile -->
+                <div class="flex items-center gap-4">
+                    <button class="relative p-2 text-slate-500 hover:text-unhas-maroon transition rounded-full hover:bg-slate-100">
+                        <i class="fa-regular fa-bell text-lg"></i>
+                        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-unhas-maroon rounded-full"></span>
+                    </button>
+
+                    <div class="flex items-center gap-3 pl-3 border-l border-slate-200">
+                        <img id="user-avatar-img" src="https://ui-avatars.com/api/?name=Prof+Dahlang&background=0284c7&color=fff" alt="Avatar" class="w-9 h-9 rounded-full object-cover border-2 border-unhas-maroon shadow-sm">
+                        <div class="hidden lg:block text-left">
+                            <h3 id="user-display-name" class="text-xs font-bold text-slate-800 leading-tight">Prof. Dr. Dahlang T., S.Si., M.Si.</h3>
+                            <p id="user-display-role" class="text-[10px] text-slate-500 font-medium">Pewawancara / Reviewer</p>
+                        </div>
+                        <button id="logout-btn" class="ml-1 text-slate-400 hover:text-red-600 transition p-1" title="Keluar">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </header>
+
+        <!-- MAIN BODY (SIDEBAR + MAIN CONTENT) -->
+        <div class="flex-1 flex overflow-hidden">
+            
+            <!-- RESPONSIVE SIDEBAR (Ref Gambar 3) -->
+            <aside id="app-sidebar" class="w-64 bg-white border-r border-slate-200 shrink-0 transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out fixed md:relative z-20 h-[calc(100vh-57px)] flex flex-col justify-between">
+                
+                <div class="p-4 space-y-6">
+                    <div>
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 px-3">MENU UTAMA</p>
+                        <nav class="space-y-1">
+                            <button data-view="dashboard-view" class="sidebar-nav-btn w-full px-3 py-2.5 text-xs rounded-lg flex items-center justify-between text-left transition bg-unhas-soft text-unhas-maroon font-bold">
+                                <span class="flex items-center gap-2.5">
+                                    <i class="fa-solid fa-chart-pie text-sm"></i> Dashboard
+                                </span>
+                                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            </button>
+
+                            <button data-view="journal-list-view" class="sidebar-nav-btn w-full px-3 py-2.5 text-xs rounded-lg flex items-center justify-between text-left text-slate-600 hover:bg-slate-100 transition">
+                                <span class="flex items-center gap-2.5">
+                                    <i class="fa-solid fa-book-medical text-sm"></i> Submissions Jurnal
+                                </span>
+                            </button>
+
+                            <button data-view="submit-journal-view" class="sidebar-nav-btn w-full px-3 py-2.5 text-xs rounded-lg flex items-center justify-between text-left text-slate-600 hover:bg-slate-100 transition">
+                                <span class="flex items-center gap-2.5">
+                                    <i class="fa-solid fa-paper-plane text-sm"></i> Submit Abstrak Baru
+                                </span>
+                            </button>
+
+                            <button data-view="cms-database-view" class="sidebar-nav-btn role-admin-only w-full px-3 py-2.5 text-xs rounded-lg flex items-center justify-between text-left text-slate-600 hover:bg-slate-100 transition">
+                                <span class="flex items-center gap-2.5">
+                                    <i class="fa-solid fa-database text-sm text-unhas-maroon"></i> Database CMS Laravel
+                                </span>
+                                <span class="px-1.5 py-0.5 text-[9px] bg-red-100 text-unhas-maroon font-bold rounded">SYS</span>
+                            </button>
+                        </nav>
+                    </div>
+
+                    <div>
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 px-3">AKSES & AKUN</p>
+                        <nav class="space-y-1">
+                            <a href="javascript:void(0)" onclick="alert('Pengaturan Akun PPDS UNHAS')" class="w-full px-3 py-2.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg flex items-center gap-2.5 transition">
+                                <i class="fa-solid fa-user-gear text-sm"></i> Profil & Password
+                            </a>
+                            <a href="javascript:void(0)" onclick="alert('Dokumentasi Panduan Penilaian Jurnal PPDS')" class="w-full px-3 py-2.5 text-xs text-slate-600 hover:bg-slate-100 rounded-lg flex items-center gap-2.5 transition">
+                                <i class="fa-solid fa-circle-info text-sm"></i> Panduan Sistem
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+
+                <!-- Sidebar Banner / Info -->
+                <div class="p-4 m-3 bg-red-50 border border-red-100 rounded-xl text-center">
+                    <p class="text-xs font-bold text-unhas-maroon">PPDS FK UNHAS</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Versi System 2026.1</p>
+                </div>
+
+            </aside>
+
+            <!-- SUB-PAGES CONTAINER -->
+            <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+                <!-- ---------------------------------------------------------------------- -->
+                <!-- SUB-PAGE 1: DASHBOARD VIEW (Ref Gambar 3) -->
+                <!-- ---------------------------------------------------------------------- -->
+                <section id="dashboard-view" class="space-y-6">
+                    
+                    <!-- Top Welcome Card -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs text-slate-500 font-semibold">Selamat Datang</span>
+                                <span id="welcome-user-role-badge" class="px-2 py-0.5 text-[10px] font-extrabold bg-blue-100 text-blue-800 rounded uppercase">REVIEWER</span>
+                            </div>
+                            <h2 id="welcome-user-name" class="text-xl md:text-2xl font-bold text-unhas-maroon">
+                                Prof. Dr. Dahlang T., S.Si., M.Si.
+                            </h2>
+                            <p class="text-xs text-slate-500 mt-1">
+                                pada Sistem Jurnal PPDS Unhas (Aplikasi Sistem Penilaian & Management Jurnal Universitas Hasanuddin)
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-3 shrink-0">
+                            <button onclick="showSubView('submit-journal-view')" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-2">
+                                <i class="fa-solid fa-plus"></i> Mulai Menilai / Upload
+                            </button>
+                            <button onclick="showSubView('journal-list-view')" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-2">
+                                <i class="fa-solid fa-clock-rotate-left"></i> Lihat Histori Penilaian
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 4 Stat Summary Cards (Ref Gambar 3) -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm card-hover-effect">
+                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">TOTAL SELEKSI</p>
+                            <p id="stat-total-submissions" class="text-3xl font-black text-slate-800 mt-2">29</p>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm card-hover-effect">
+                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">DITERIMA (ACCEPTED)</p>
+                            <p id="stat-accepted-submissions" class="text-3xl font-black text-emerald-600 mt-2">13</p>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm card-hover-effect">
+                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">SUDAH DINILAI</p>
+                            <p id="stat-pending-submissions" class="text-3xl font-black text-blue-600 mt-2">12</p>
+                        </div>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm card-hover-effect">
+                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">PERLU REVISI / BELUM</p>
+                            <p id="stat-revision-submissions" class="text-3xl font-black text-rose-600 mt-2">1</p>
+                        </div>
+                    </div>
+
+                    <!-- Chart & Recent Submissions Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        
+                        <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-chart-line text-unhas-maroon"></i> Tren Penggunaan Jurnal PPDS Universitas Hasanuddin
+                                </h3>
+                                <span class="text-xs text-slate-400 font-medium">Data Realtime 2026</span>
+                            </div>
+                            
+                            <div class="h-56 bg-slate-50 rounded-xl border border-slate-100 p-4 flex items-end justify-between gap-3">
+                                <div class="flex-1 bg-red-100 hover:bg-unhas-maroon rounded-t-md h-[40%] transition group relative flex flex-col justify-end items-center pb-2">
+                                    <span class="text-[10px] font-bold text-unhas-maroon group-hover:text-white mb-1">14</span>
+                                    <span class="text-[9px] text-slate-400 uppercase tracking-tighter">Jan</span>
+                                </div>
+                                <div class="flex-1 bg-red-100 hover:bg-unhas-maroon rounded-t-md h-[65%] transition group relative flex flex-col justify-end items-center pb-2">
+                                    <span class="text-[10px] font-bold text-unhas-maroon group-hover:text-white mb-1">22</span>
+                                    <span class="text-[9px] text-slate-400 uppercase tracking-tighter">Feb</span>
+                                </div>
+                                <div class="flex-1 bg-red-100 hover:bg-unhas-maroon rounded-t-md h-[85%] transition group relative flex flex-col justify-end items-center pb-2">
+                                    <span class="text-[10px] font-bold text-unhas-maroon group-hover:text-white mb-1">29</span>
+                                    <span class="text-[9px] text-slate-400 uppercase tracking-tighter">Mar</span>
+                                </div>
+                                <div class="flex-1 bg-red-200 hover:bg-unhas-maroon rounded-t-md h-[50%] transition group relative flex flex-col justify-end items-center pb-2">
+                                    <span class="text-[10px] font-bold text-unhas-maroon group-hover:text-white mb-1">18</span>
+                                    <span class="text-[9px] text-slate-400 uppercase tracking-tighter">Apr</span>
+                                </div>
+                                <div class="flex-1 bg-red-100 hover:bg-unhas-maroon rounded-t-md h-[70%] transition group relative flex flex-col justify-end items-center pb-2">
+                                    <span class="text-[10px] font-bold text-unhas-maroon group-hover:text-white mb-1">25</span>
+                                    <span class="text-[9px] text-slate-400 uppercase tracking-tighter">Mei</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between overflow-hidden">
+                            <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Submissions Terbaru</h3>
+                                <button onclick="showSubView('journal-list-view')" class="text-xs text-unhas-maroon font-bold hover:underline">Lihat Semua</button>
+                            </div>
+                            
+                            <div id="recent-submissions-list" class="divide-y divide-slate-100 flex-1 overflow-y-auto max-h-72">
+                                <!-- Rendered dynamically by app.js -->
+                            </div>
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- ---------------------------------------------------------------------- -->
+                <!-- SUB-PAGE 2: ABSTRACT SUBMISSIONS CMS TABLE VIEW (Ref Gambar 4) -->
+                <!-- ---------------------------------------------------------------------- -->
+                <section id="journal-list-view" class="hidden space-y-6">
+                    
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-900">Abstract Submissions</h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Review abstract submissions from IC-RiCoS 2026 and SEMRIPMAS IV 2026 and record final reviewer decisions.</p>
+                        </div>
+                        <button onclick="showSubView('submit-journal-view')" class="px-4 py-2 bg-unhas-maroon hover:bg-unhas-maroon-dark text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-2 self-start md:self-auto">
+                            <i class="fa-solid fa-plus"></i> Submit Abstrak Baru
+                        </button>
+                    </div>
+
+                    <!-- Filter & Search Controls Bar -->
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                            <div class="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
+                                <button data-filter="all" class="filter-tab-btn px-3 py-1.5 text-xs font-bold rounded-lg transition bg-unhas-maroon text-white">Semua Status</button>
+                                <button data-filter="pending" class="filter-tab-btn px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-white rounded-lg transition">Menunggu Review</button>
+                                <button data-filter="accepted" class="filter-tab-btn px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-white rounded-lg transition">Diterima (Accepted)</button>
+                                <button data-filter="revision_required" class="filter-tab-btn px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-white rounded-lg transition">Perlu Revisi</button>
+                                <button data-filter="rejected" class="filter-tab-btn px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-white rounded-lg transition">Ditolak</button>
+                            </div>
+
+                            <div class="relative w-full lg:w-72">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input type="text" id="journals-search-input" placeholder="Cari judul, ID, atau nama residen..." class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:border-unhas-maroon outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CMS Submissions Table (Ref Gambar 4) -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full custom-cms-table text-left">
+                                <thead>
+                                    <tr>
+                                        <th>SUBMISSION ID</th>
+                                        <th>EVENT / KATEGORI</th>
+                                        <th>JUDUL ABSTRAK / JURNAL</th>
+                                        <th>SUBTHEME / DEPARTEMEN</th>
+                                        <th>PRESENTING AUTHOR</th>
+                                        <th>SUBMITTED</th>
+                                        <th>STATUS</th>
+                                        <th class="text-right">ACTION</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="journals-table-tbody">
+                                    <!-- Rendered dynamically by app.js -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </section>
+
+
+                <!-- ---------------------------------------------------------------------- -->
+                <!-- SUB-PAGE 3: SUBMIT ABSTRACT MULTI-SECTION FORM (Ref Gambar 2 & 5) -->
+                <!-- ---------------------------------------------------------------------- -->
+                <section id="submit-journal-view" class="hidden space-y-6 max-w-4xl mx-auto">
+                    
+                    <div class="border-b border-slate-200 pb-4">
+                        <h2 class="text-xl font-bold text-slate-900">Form Pengajuan Jurnal & Abstrak PPDS</h2>
+                        <p class="text-xs text-slate-500 mt-1">Lengkapi informasi judul, subtema, abstrak, penulis, dan unggah berkas PDF naskah jurnal.</p>
+                    </div>
+
+                    <form id="journal-submit-form" class="space-y-6">
+                        
+                        <!-- SECTION 01: Abstract Information (Ref Gambar 2) -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                            <div class="border-b border-slate-100 pb-3">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-unhas-maroon">SECTION 01</span>
+                                <h3 class="text-lg font-bold text-slate-800">Abstract Information</h3>
+                                <p class="text-xs text-slate-500">Provide the title, conference subtheme, abstract, and keywords for your contribution.</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Title *</label>
+                                <input type="text" id="submit-title" required placeholder="Enter the title here" class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-300 focus:border-unhas-maroon outline-none transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Conference Subtheme *</label>
+                                <select id="submit-subtheme" required class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-300 focus:border-unhas-maroon outline-none transition bg-white">
+                                    <option value="">Select conference subtheme</option>
+                                    <option value="Perubahan iklim, kebencanaan, dan ekonomi sirkular">Perubahan iklim, kebencanaan, dan ekonomi sirkular</option>
+                                    <option value="Sustainable Agriculture & Clinical Innovation">Sustainable Agriculture & Clinical Innovation</option>
+                                    <option value="Environmental Resilience and Sustainability">Environmental Resilience and Sustainability</option>
+                                    <option value="Humanities, Ethics, and Policy">Humanities, Ethics, and Policy</option>
+                                    <option value="Hilirisasi riset dan inovasi sosial">Hilirisasi riset dan inovasi sosial</option>
+                                    <option value="Bedah Rekonstruksi & Minimally Invasive">Bedah Rekonstruksi & Minimally Invasive</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Abstract *</label>
+                                <textarea id="submit-abstract-text" rows="6" required placeholder="Enter your abstract here" class="w-full px-4 py-3 text-sm rounded-xl border border-slate-300 focus:border-unhas-maroon outline-none transition"></textarea>
+                                <div class="text-right">
+                                    <span id="abstract-word-count" class="text-xs text-slate-400 font-mono">0 words</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Keywords *</label>
+                                <input type="text" id="submit-keywords" placeholder="e.g. sustainability, innovation, public health" class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-300 focus:border-unhas-maroon outline-none transition">
+                            </div>
+                        </div>
+
+                        <!-- SECTION 02: Author Information (Ref Gambar 5) -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                            <div class="border-b border-slate-100 pb-3">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-unhas-maroon">SECTION 02</span>
+                                <h3 class="text-lg font-bold text-slate-800">Author Information</h3>
+                                <p class="text-xs text-slate-500">Provide the presenting author, corresponding email, affiliation, and co-author information.</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Presenting Author *</label>
+                                    <input type="text" id="submit-author-name" required placeholder="Nama lengkap & gelar" class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-300 focus:border-unhas-maroon outline-none transition" value="dr. Ijoneon Ardiansyah">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Corresponding Email *</label>
+                                    <input type="email" id="submit-author-email" required placeholder="email@pasca.unhas.ac.id" class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-300 focus:border-unhas-maroon outline-none transition" value="ijoneon@pasca.unhas.ac.id">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Institution / Affiliation *</label>
+                                    <input type="text" id="submit-author-institution" required class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-300 focus:border-unhas-maroon outline-none transition" value="Universitas Hasanuddin">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">Departemen / Prodi PPDS *</label>
+                                    <select id="submit-author-department" required class="w-full px-4 py-2.5 text-sm rounded-xl border border-slate-300 focus:border-unhas-maroon outline-none transition bg-white">
+                                        <option value="Spesialis Ilmu Bedah Orthopedi">Spesialis Ilmu Bedah Orthopedi</option>
+                                        <option value="Spesialis Anestesiologi & Terapi Intensif">Spesialis Anestesiologi & Terapi Intensif</option>
+                                        <option value="Spesialis Ilmu Kesehatan Anak">Spesialis Ilmu Kesehatan Anak</option>
+                                        <option value="Spesialis Obstetri & Ginekologi">Spesialis Obstetri & Ginekologi</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="pt-3">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Co-authors</label>
+                                <div id="coauthors-tags-container" class="space-y-2 mb-3">
+                                    <p class="text-xs text-slate-400 italic text-center py-2 border border-dashed border-slate-200 rounded-lg">No co-authors added yet.</p>
+                                </div>
+
+                                <div class="flex flex-col sm:flex-row items-center gap-2">
+                                    <input type="text" id="coauthor-name-input" placeholder="Nama Co-Author" class="w-full sm:w-1/2 px-3 py-2 text-xs rounded-lg border border-slate-300 outline-none">
+                                    <input type="email" id="coauthor-email-input" placeholder="Email Co-Author (Opsional)" class="w-full sm:w-1/2 px-3 py-2 text-xs rounded-lg border border-slate-300 outline-none">
+                                    <button type="button" id="add-coauthor-btn" class="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-lg transition shrink-0">
+                                        + ADD AUTHOR
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECTION 03: File Upload & Storage -->
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                            <div class="border-b border-slate-100 pb-3">
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-unhas-maroon">SECTION 03</span>
+                                <h3 class="text-lg font-bold text-slate-800">Dokumen PDF Naskah Jurnal</h3>
+                                <p class="text-xs text-slate-500">Unggah berkas lengkap PDF naskah jurnal (Maksimal 15 MB). Tersimpan otomatis ke Supabase Storage.</p>
+                            </div>
+
+                            <div id="file-upload-dropzone" class="border-2 border-dashed border-slate-300 hover:border-unhas-maroon p-8 rounded-2xl text-center cursor-pointer transition bg-slate-50/50">
+                                <input type="file" id="journal-file-input" accept=".pdf,.doc,.docx" class="hidden">
+                                <i class="fa-solid fa-cloud-arrow-up text-4xl text-unhas-maroon mb-3"></i>
+                                <p class="text-sm font-bold text-slate-700">Tarik & Lepas File PDF Jurnal Di Sini</p>
+                                <p class="text-xs text-slate-400 mt-1">atau klik untuk menjelajah dokumen dari perangkat anda</p>
+                            </div>
+
+                            <div id="file-preview-card" class="hidden p-4 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <i class="fa-solid fa-file-pdf text-2xl text-unhas-maroon"></i>
+                                    <div>
+                                        <p id="preview-file-name" class="text-xs font-bold text-slate-800 truncate max-w-xs">DRAF_JURNAL.pdf</p>
+                                        <p id="preview-file-size" class="text-[10px] text-slate-500">2.4 MB</p>
+                                    </div>
+                                </div>
+                                <span class="text-xs text-emerald-600 font-bold flex items-center gap-1"><i class="fa-solid fa-check-circle"></i> Ready</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-3 pt-2">
+                            <button type="button" onclick="showSubView('journal-list-view')" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+                                Batal
+                            </button>
+                            <button type="submit" id="btn-submit-journal" class="px-6 py-2.5 bg-unhas-maroon hover:bg-unhas-maroon-dark text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2">
+                                <i class="fa-solid fa-paper-plane"></i> Submit Abstract & Journal
+                            </button>
+                        </div>
+
+                    </form>
+
+                </section>
+
+
+                <!-- ---------------------------------------------------------------------- -->
+                <!-- SUB-PAGE 4: LARAVEL CMS DATABASE BROWSER -->
+                <!-- ---------------------------------------------------------------------- -->
+                <section id="cms-database-view" class="hidden space-y-6">
+                    <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-xl border border-slate-800 space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                            <div>
+                                <span class="px-2.5 py-1 text-[10px] font-mono font-bold bg-red-900 text-red-200 rounded uppercase">Laravel Eloquent Model Simulator</span>
+                                <h2 class="text-xl font-bold mt-2 flex items-center gap-2">
+                                    <i class="fa-solid fa-database text-unhas-gold"></i> Database Table Explorer (Supabase / Postgres)
+                                </h2>
+                            </div>
+                            <div class="flex items-center gap-2 font-mono text-xs text-slate-400">
+                                <span>Table: <strong class="text-white">public.journals</strong></span>
+                                <span>•</span>
+                                <span>Records: <strong id="cms-journals-count" class="text-emerald-400">3</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full custom-cms-table text-left">
+                                <thead>
+                                    <tr class="font-mono text-[11px]">
+                                        <th>#</th>
+                                        <th>UUID (ID)</th>
+                                        <th>SUBMISSION_CODE</th>
+                                        <th>TITLE</th>
+                                        <th>DEPARTMENT</th>
+                                        <th>STATUS</th>
+                                        <th>CREATED_AT</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cms-db-rows-container">
+                                    <!-- Rendered by app.js -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+
+        </div>
+
+        <!-- ============================================================================== -->
+        <!-- FOOTER (Mandatory: Oleh Ariel Usman Copyright 2026 & Instagram @arielrcun) -->
+        <!-- ============================================================================== -->
+        <footer class="bg-white border-t border-slate-200 py-4 px-6 text-center text-xs text-slate-600 flex flex-col sm:flex-row items-center justify-between gap-2 z-10">
+            <div>
+                <span class="font-semibold text-slate-800">Oleh Ariel Usman</span> Copyright 2026 • Program Pendidikan Dokter Spesialis UNHAS
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <a href="https://instagram.com/arielrcun" target="_blank" rel="noopener noreferrer" class="flex items-center gap-1.5 text-unhas-maroon hover:text-unhas-maroon-dark font-bold transition">
+                    <i class="fa-brands fa-instagram text-base"></i>
+                    <span>Insta: @arielrcun</span>
+                </a>
+            </div>
+        </footer>
+
+    </div>
+
+
+    <!-- ============================================================================== -->
+    <!-- MODALS SECTION -->
+    <!-- ============================================================================== -->
+
+    <!-- 1. PDF PREVIEW MODAL -->
+    <div id="pdf-preview-modal" class="modal-overlay fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-5xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
+                <div class="flex items-center gap-3">
+                    <span id="preview-modal-code" class="px-2.5 py-1 text-xs font-mono font-bold bg-unhas-maroon text-white rounded">CODE</span>
+                    <h3 id="preview-modal-title" class="text-sm font-bold truncate max-w-xl">Judul Jurnal</h3>
+                </div>
+                <button class="close-modal-btn text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-4 flex-1">
+                <div class="flex flex-wrap items-center justify-between gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                    <div>
+                        <span class="text-slate-400">Penulis:</span> <strong id="preview-modal-author" class="text-slate-800">dr. Author</strong> (<span id="preview-modal-email">email@unhas.ac.id</span>)
+                    </div>
+                    <div>
+                        <span class="text-slate-400">Subtema:</span> <strong id="preview-modal-subtheme" class="text-slate-800">Subtema</strong>
+                    </div>
+                    <div id="preview-modal-status-badge"></div>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">ABSTRAK:</h4>
+                    <p id="preview-modal-abstract" class="text-xs text-slate-600 leading-relaxed bg-white p-3 rounded-lg border border-slate-200">Abstrak text...</p>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">PREVIEW FILE DOKUMEN PDF:</h4>
+                        <a id="preview-pdf-download-link" href="#" target="_blank" download class="text-xs text-unhas-maroon hover:underline font-bold flex items-center gap-1">
+                            <i class="fa-solid fa-download"></i> Unduh File PDF Original
+                        </a>
+                    </div>
+                    <div class="pdf-preview-box overflow-hidden rounded-xl border border-slate-300">
+                        <iframe id="pdf-preview-iframe" src="https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" class="w-full h-[480px]"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+                <button class="close-modal-btn px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl transition">
+                    Tutup Preview
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 2. REVIEW & DECISION MODAL -->
+    <div id="review-modal" class="modal-overlay fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden">
+            <div class="p-4 bg-unhas-maroon text-white flex items-center justify-between">
+                <h3 class="text-sm font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-gavel text-unhas-gold"></i> Form Penilaian & Review Keputusan Jurnal
+                </h3>
+                <button class="close-modal-btn text-white/80 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="review-decision-form" class="p-6 space-y-4">
+                <div class="p-3 bg-red-50 border border-red-100 rounded-xl text-xs space-y-1">
+                    <p class="font-mono text-unhas-maroon font-bold" id="review-modal-code">SEMRIPMAS2026-001</p>
+                    <p class="font-bold text-slate-800 line-clamp-1" id="review-modal-title">Judul Jurnal</p>
+                    <p class="text-slate-500" id="review-modal-author">dr. Author</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-2">Pilih Keputusan Reviewer *</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <label class="border-2 border-emerald-200 bg-emerald-50/50 p-3 rounded-xl cursor-pointer hover:bg-emerald-100 flex flex-col items-center text-center transition">
+                            <input type="radio" name="review-decision" value="accepted" checked class="mb-1 accent-emerald-600">
+                            <span class="text-xs font-bold text-emerald-800">TERIMA</span>
+                            <span class="text-[10px] text-emerald-600">Accepted</span>
+                        </label>
+                        <label class="border-2 border-indigo-200 bg-indigo-50/50 p-3 rounded-xl cursor-pointer hover:bg-indigo-100 flex flex-col items-center text-center transition">
+                            <input type="radio" name="review-decision" value="revision_required" class="mb-1 accent-indigo-600">
+                            <span class="text-xs font-bold text-indigo-800">REVISI</span>
+                            <span class="text-[10px] text-indigo-600">Revision</span>
+                        </label>
+                        <label class="border-2 border-rose-200 bg-rose-50/50 p-3 rounded-xl cursor-pointer hover:bg-rose-100 flex flex-col items-center text-center transition">
+                            <input type="radio" name="review-decision" value="rejected" class="mb-1 accent-rose-600">
+                            <span class="text-xs font-bold text-rose-800">TOLAK</span>
+                            <span class="text-[10px] text-rose-600">Rejected</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Catatan & Ulasan Reviewer *</label>
+                    <textarea id="review-notes-input" rows="4" required placeholder="Tuliskan masukan, catatan revisi, atau alasan penolakan naskah jurnal..." class="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-300 focus:border-unhas-maroon outline-none transition"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end gap-2 pt-2">
+                    <button type="button" class="close-modal-btn px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-5 py-2 bg-unhas-maroon hover:bg-unhas-maroon-dark text-white font-bold text-xs rounded-xl shadow transition">
+                        Simpan Keputusan Review
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- 3. COMMENTS & DISCUSSION THREAD MODAL -->
+    <div id="comment-modal" class="modal-overlay fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
+                <h3 class="text-sm font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-comments text-blue-400"></i> Diskusi & Catatan Jurnal
+                </h3>
+                <button class="close-modal-btn text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-3 bg-slate-100 border-b border-slate-200 text-xs">
+                <p id="comment-modal-title" class="font-bold text-slate-800 line-clamp-1">Judul Jurnal</p>
+            </div>
+
+            <div id="comments-thread-container" class="p-4 overflow-y-auto space-y-3 flex-1"></div>
+
+            <form id="submit-comment-form" class="p-3 bg-slate-50 border-t border-slate-200 flex items-center gap-2">
+                <input type="text" id="comment-text-input" placeholder="Tulis komentar atau balasan..." required class="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-300 outline-none focus:border-unhas-maroon">
+                <button type="submit" class="px-4 py-2 bg-unhas-maroon text-white font-bold text-xs rounded-xl hover:bg-unhas-maroon-dark transition shrink-0">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Client App Logic -->
+    <script src="public/js/app.js"></script>
+    <script src="/public/js/app.js"></script>
+</body>
+</html>
