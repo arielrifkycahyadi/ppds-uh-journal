@@ -14,6 +14,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ALLOW_MEMORY_FALLBACK = process.env.ALLOW_MEMORY_FALLBACK === 'true' || (!process.env.VERCEL && !process.env.SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL);
 
 // Middlewares
 app.use(cors());
@@ -52,8 +53,14 @@ const upload = multer({
 });
 
 // Initialize Supabase Client if env provided
-let SUPABASE_URL = process.env.SUPABASE_URL || '';
-let SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || '';
+function resolveSupabaseConfig() {
+    const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const anon = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    return { url, anon };
+}
+
+let SUPABASE_URL = '';
+let SUPABASE_KEY = '';
 let supabase = null;
 
 function initSupabase(url, key) {
@@ -71,6 +78,9 @@ function initSupabase(url, key) {
     return false;
 }
 
+const resolvedSupabaseConfig = resolveSupabaseConfig();
+SUPABASE_URL = resolvedSupabaseConfig.url;
+SUPABASE_KEY = resolvedSupabaseConfig.anon;
 initSupabase(SUPABASE_URL, SUPABASE_KEY);
 
 // Serve Static Frontend Files
@@ -209,14 +219,17 @@ let memoryComments = [
 
 // 1. Get System Status & Supabase Config Info
 app.get('/api/status', (req, res) => {
+    const envConfig = resolveSupabaseConfig();
     res.json({
         app: 'PPDS UNHAS Journal Management & CMS',
         author: 'Ariel Usman',
         copyright: '2026',
         supabase_connected: !!supabase,
-        supabase_url: SUPABASE_URL ? SUPABASE_URL.slice(0, 20) + '...' : null,
+        supabase_url: SUPABASE_URL ? SUPABASE_URL.slice(0, 20) + '...' : (envConfig.url ? envConfig.url.slice(0, 20) + '...' : null),
         total_journals: memoryJournals.length,
-        environment: process.env.VERCEL ? 'Vercel Serverless' : 'Node.js Local'
+        environment: process.env.VERCEL ? 'Vercel Serverless' : 'Node.js Local',
+        env_detected: !!(envConfig.url && envConfig.anon),
+        env_source: envConfig.url && envConfig.anon ? 'SUPABASE_URL / SUPABASE_ANON_KEY' : 'missing'
     });
 });
 
@@ -293,6 +306,13 @@ app.post('/api/auth/login', async (req, res) => {
             }
         }
 
+        if (!ALLOW_MEMORY_FALLBACK) {
+            return res.status(503).json({
+                success: false,
+                message: 'Supabase belum dikonfigurasi di Vercel / environment. Login demo dinonaktifkan untuk mencegah mode tidak layak pakai.'
+            });
+        }
+
         const matched = memoryUsers.find((u) => {
             const sameIdentity = u.email.toLowerCase() === cleanIdentifier.toLowerCase() || u.nim_nip === cleanIdentifier;
             return sameIdentity && String(u.password).trim() === cleanPassword;
@@ -329,9 +349,18 @@ app.get('/api/journals', async (req, res) => {
                 return res.json({ success: true, source: 'supabase', data });
             }
         } catch (err) {
-            console.error('Supabase query error, fallback to memory:', err.message);
+            console.error('Supabase query error:', err.message);
         }
     }
+
+    if (!ALLOW_MEMORY_FALLBACK) {
+        return res.status(503).json({
+            success: false,
+            message: 'Database Supabase belum aktif. Silakan atur konfigurasi di Vercel / environment.',
+            source: 'supabase_required'
+        });
+    }
+
     res.json({ success: true, source: 'memory', data: memoryJournals });
 });
 
