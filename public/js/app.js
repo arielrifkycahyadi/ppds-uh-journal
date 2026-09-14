@@ -196,47 +196,56 @@ function updateCloudStatusBadge() {
 function bindLoginEvents() {
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
-        loginForm.addEventListener('submit', (e) => {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const identifier = document.getElementById('login-identifier').value.trim();
-            const password = document.getElementById('login-password').value;
+            const password = document.getElementById('login-password').value.trim();
 
             if (!identifier || !password) {
-                alert('Silakan masukkan Email / NIM / NIP dan Password!');
+                showToast('Silakan masukkan Email / NIM / NIP dan Password!');
                 return;
             }
 
-            // Find matching user or fallback to reviewer
-            let matchedUser = Object.values(PRESET_USERS).find(
-                u => u.email.toLowerCase() === identifier.toLowerCase() || u.nim_nip === identifier
-            );
+            const submitBtn = document.getElementById('login-submit-btn');
+            const originalText = submitBtn ? submitBtn.innerHTML : 'Sign In';
 
-            if (!matchedUser) {
-                // Create dynamic residen account if unknown identifier entered
-                matchedUser = {
-                    id: 'usr-' + Date.now(),
-                    email: identifier.includes('@') ? identifier : `${identifier}@pasca.unhas.ac.id`,
-                    nim_nip: identifier,
-                    full_name: `dr. ${identifier} (Residen UNHAS)`,
-                    role: 'residen',
-                    role_label: 'Residen PPDS UNHAS',
-                    department: 'Program Pendidikan Dokter Spesialis UNHAS',
-                    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(identifier)}&background=800000&color=fff`
-                };
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span>Memeriksa akun...</span>';
             }
 
-            performLogin(matchedUser);
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ identifier, password })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    throw new Error(result.message || 'Login gagal. Silakan cek kredensial Anda.');
+                }
+
+                if (result.user) {
+                    performLogin(result.user);
+                    loginForm.reset();
+                    showToast(`Login berhasil untuk ${result.user.full_name}.`);
+                } else {
+                    throw new Error('Data user tidak valid dari server.');
+                }
+            } catch (error) {
+                showToast(error.message || 'Terjadi kesalahan saat login.');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            }
         });
     }
-
-    // Preset quick login buttons
-    const btnAdmin = document.getElementById('quick-login-admin');
-    const btnReviewer = document.getElementById('quick-login-reviewer');
-    const btnResiden = document.getElementById('quick-login-residen');
-
-    if (btnAdmin) btnAdmin.addEventListener('click', () => performLogin(PRESET_USERS.admin));
-    if (btnReviewer) btnReviewer.addEventListener('click', () => performLogin(PRESET_USERS.reviewer));
-    if (btnResiden) btnResiden.addEventListener('click', () => performLogin(PRESET_USERS.residen));
 
     // Toggle Password Visibility
     const togglePassBtn = document.getElementById('toggle-password-btn');

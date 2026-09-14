@@ -239,62 +239,70 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Silakan masukkan Email / NIP / NIM dan Password.' });
         }
 
-        const cleanIdentifier = identifier.trim();
+        const cleanIdentifier = String(identifier).trim();
+        const cleanPassword = String(password).trim();
 
-        // 1. Check in Supabase if connected
+        if (!cleanIdentifier || !cleanPassword) {
+            return res.status(400).json({ success: false, message: 'Identifier atau password tidak boleh kosong.' });
+        }
+
+        const buildUserResponse = (record) => ({
+            id: record.id,
+            email: record.email,
+            nim_nip: record.nim_nip,
+            full_name: record.full_name,
+            role: record.role,
+            role_label: record.role_label || (
+                record.role === 'admin'
+                    ? 'Admin SDM FK UNHAS'
+                    : record.role === 'reviewer'
+                        ? 'Dosen Reviewer Jurnal'
+                        : 'Residen PPDS UNHAS'
+            ),
+            department: record.department || 'Fakultas Kedokteran UNHAS',
+            avatar: record.avatar || record.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(record.full_name)}&background=${record.role === 'admin' ? '800000' : (record.role === 'reviewer' ? '0284c7' : '10b981')}&color=fff`
+        });
+
         if (supabase) {
             try {
                 const { data, error } = await supabase
                     .from('users')
                     .select('*')
                     .or(`email.ilike.${cleanIdentifier},nim_nip.eq.${cleanIdentifier}`)
-                    .eq('password_hash', password)
-                    .maybeSingle();
+                    .limit(10);
 
-                if (!error && data) {
-                    const roleLabel = data.role === 'admin' 
-                        ? 'Admin SDM FK UNHAS' 
-                        : (data.role === 'reviewer' ? 'Dosen Reviewer Jurnal' : 'Residen PPDS UNHAS');
-
-                    return res.json({
-                        success: true,
-                        source: 'supabase',
-                        user: {
-                            id: data.id,
-                            email: data.email,
-                            nim_nip: data.nim_nip,
-                            full_name: data.full_name,
-                            role: data.role,
-                            role_label: roleLabel,
-                            department: data.department || 'Fakultas Kedokteran UNHAS',
-                            avatar: data.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.full_name)}&background=${data.role === 'admin' ? '800000' : (data.role === 'reviewer' ? '0284c7' : '10b981')}&color=fff`
-                        }
+                if (!error && data && data.length > 0) {
+                    const matched = data.find((user) => {
+                        const storedPassword = String(user.password_hash ?? '').trim();
+                        return storedPassword === cleanPassword && (
+                            user.email?.toLowerCase() === cleanIdentifier.toLowerCase() ||
+                            user.nim_nip === cleanIdentifier
+                        );
                     });
+
+                    if (matched) {
+                        return res.json({
+                            success: true,
+                            source: 'supabase',
+                            user: buildUserResponse(matched)
+                        });
+                    }
                 }
             } catch (err) {
                 console.error('Supabase user auth query error:', err.message);
             }
         }
 
-        // 2. Check in In-Memory Users
-        const matched = memoryUsers.find(
-            u => (u.email.toLowerCase() === cleanIdentifier.toLowerCase() || u.nim_nip === cleanIdentifier) && u.password === password
-        );
+        const matched = memoryUsers.find((u) => {
+            const sameIdentity = u.email.toLowerCase() === cleanIdentifier.toLowerCase() || u.nim_nip === cleanIdentifier;
+            return sameIdentity && String(u.password).trim() === cleanPassword;
+        });
 
         if (matched) {
             return res.json({
                 success: true,
                 source: 'memory',
-                user: {
-                    id: matched.id,
-                    email: matched.email,
-                    nim_nip: matched.nim_nip,
-                    full_name: matched.full_name,
-                    role: matched.role,
-                    role_label: matched.role_label,
-                    department: matched.department,
-                    avatar: matched.avatar
-                }
+                user: buildUserResponse(matched)
             });
         }
 
@@ -303,6 +311,7 @@ app.post('/api/auth/login', async (req, res) => {
             message: 'Email / NIP / NIM atau Password salah!'
         });
     } catch (err) {
+        console.error('Login process error:', err);
         res.status(500).json({ success: false, message: 'Terjadi kesalahan sistem saat proses login.' });
     }
 });
